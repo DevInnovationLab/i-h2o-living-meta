@@ -1,0 +1,131 @@
+---
+title: "01-keyword-pull-merge"
+output: html_document
+date: "2025-08-01"
+---
+
+Running this code requires that you have run a keyword pull in each of the 4 databases and saved the output as pubmed.xlsx, scopus.csv, embase.csv, and cochrane.csv. The final output is lit_merged_unique.csv, which combines studies from across the 4 databases without duplicates. 
+
+```{r}
+packages <-
+  c("revtools",
+    "readxl",
+    "tidyverse",
+    "dplyr",
+    "lubridate",
+    "stringr",
+    "janitor"
+  )
+
+install_if_missing <- function(package) {
+  if (!require(package, character.only = TRUE, quietly = TRUE)) {
+    install.packages(package)
+    library(package, character.only = TRUE)
+  }
+}
+
+lapply(packages, install_if_missing)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dplyr)
+library(lubridate)
+library(stringr)
+```
+
+## PubMed
+```{r}
+lit_pubmed <- read_excel("../data/pubmed.xlsx")
+
+# standardize variable names
+lit_pubmed <- lit_pubmed %>% 
+  clean_names() %>% 
+  rename(authors = author_s, country = place_of_publication, journal = journal_title) %>%
+  mutate(year = substr(date_of_publication, 1, 4))
+
+# extract DOI 
+lit_pubmed$doi <- str_extract(lit_pubmed$article_identifier, "10\\.[^\\s\\[]+")
+
+# select only variables used in merged study dataset
+lit_pubmed_sel <- lit_pubmed %>% select(title, authors, journal, volume, issue, year, abstract, doi)
+
+# format changes
+lit_pubmed_sel <- lit_pubmed_sel %>%
+  mutate(volume = as.character(volume), year = as.character(year))
+```
+
+## Scopus 
+```{r}
+lit_scopus <- read_csv("../data/scopus.csv")
+
+# standardize variable names
+lit_scopus <- lit_scopus %>% 
+  clean_names() %>% 
+  rename(pmid = pub_med_id, journal = source_title)
+
+# select only variables used in merged study dataset
+lit_scopus_sel <- lit_scopus %>% select(title, authors, journal, doi, volume, issue, year, abstract)
+
+# format changes
+lit_scopus_sel <- lit_scopus_sel %>%
+  mutate(volume = as.character(volume), year = as.character(year))
+```
+
+## Embase
+```{r}
+lit_embase <- read_csv("../data/embase.csv")
+
+# standardize variable names
+lit_embase <- lit_embase %>%
+  clean_names() %>%
+  rename(authors = author_names, year = publication_year, journal = source_title)
+
+# select only variables used in merged study dataset
+lit_embase_sel <- lit_embase %>% select(title, authors, journal, doi, volume, issue, year, abstract)
+
+# format changes
+lit_embase_sel <- lit_embase_sel %>%
+  mutate(volume = as.character(volume), year = as.character(year))
+```
+
+## Cochrane
+```{r}
+lit_cochrane <- read_csv("../data/cochrane.csv")
+
+# standardize variable names
+lit_cochrane <- lit_cochrane %>% 
+  clean_names() %>%
+  rename(authors = author_s, journal = source)
+
+# select only variables used in merged study dataset
+lit_cochrane_sel <- lit_cochrane %>% select(title, authors, journal, doi, volume, issue, year, abstract)
+
+# format changes
+lit_cochrane_sel <- lit_cochrane_sel %>%
+  mutate(volume = as.character(volume), year = as.character(year))
+```
+
+## Merge into 1 dataframe
+```{r}
+lit_merged <- bind_rows(lit_embase_sel, lit_pubmed_sel, lit_scopus_sel, lit_cochrane_sel)
+```
+
+## Delete duplicates
+```{r}
+# by DOI
+lit_merged_unique <- lit_merged %>%
+  distinct(doi, .keep_all = TRUE)
+
+# by title
+lit_merged_unique <- lit_merged_unique %>%
+  distinct(title, .keep_all = TRUE)
+```
+
+## Export
+```{r}
+write.csv(lit_merged_unique, "../output/lit_merged_unique.csv", row.names = FALSE)
+```
