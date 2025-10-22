@@ -102,6 +102,12 @@
 !/**/documentation/**/*.csv
 
 #######################
+# Include data files in the data folder
+!/**/data/**/*.csv
+!/**/data/**/*.xlsx
+!/**/data/**/*.xls
+
+#######################
 # Include all the files with passwords or tokens here. All files named
 # password or passwords are with this template ignored no matter which
 # format you are using. Additionally, all content in any folder called
