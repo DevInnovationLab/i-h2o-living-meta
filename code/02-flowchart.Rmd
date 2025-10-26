@@ -15,13 +15,16 @@ library(readxl)
 library(dplyr)
 library(DiagrammeR)
 library(htmlwidgets)
+```
 
+# 2025 counts - from Manual systematic review selection google sheets
+```{r}
 # read data
 data <- read.csv("../data/Manual systematic review selection - 999_data_set.csv")
 
 # Identified through database searching
-counts <- list() # define a list of counts
-counts$database <- sum(data$identified.through.database.searching == 1, na.rm = TRUE)
+counts_2025 <- list() # define a list of counts
+counts_2025$database <- sum(data$identified.through.database.searching == 1, na.rm = TRUE)
 
 # Studies from other sources (where identified through database searching == 0)
 other_sources_data <- data %>%
@@ -30,38 +33,75 @@ other_sources_data <- data %>%
 # Unique study sources for added studies
 unique_sources <- unique(other_sources_data$source)
 sources_text <- paste(unique_sources, collapse = " and ")
-counts$other_sources <- nrow(other_sources_data %>% filter(source != "New addition")) + 
+counts_2025$other_sources <- nrow(other_sources_data %>% filter(source != "New addition")) + 
                         sum(data$source == "New addition" & data$identified.through.database.searching == 0, na.rm = TRUE)
 
+counts_2025$total <- counts_2025$database + counts_2025$other_sources
+
 # Screened
-counts$screened <- sum(data$screened == 1, na.rm = TRUE)
+counts_2025$screened <- sum(data$screened == 1, na.rm = TRUE)
 
 # Full text screened for eligibility
-counts$full_text <- sum(data$full.text.screened == 1, na.rm = TRUE)
+counts_2025$full_text <- sum(data$full.text.screened == 1, na.rm = TRUE)
 
 # Relevant intervention
-counts$relevant_intervention <- sum(data$relevant.intervention == 1, na.rm = TRUE)
+counts_2025$relevant_intervention <- sum(data$relevant.intervention == 1, na.rm = TRUE)
 
 # Low- or middle-income country
-counts$lmic <- sum(data$low..or.middle.income.country == 1, na.rm = TRUE)
+counts_2025$lmic <- sum(data$low..or.middle.income.country == 1, na.rm = TRUE)
 
 # RCTs
-counts$rct <- sum(data$RCT == 1, na.rm = TRUE)
+counts_2025$rct <- sum(data$RCT == 1, na.rm = TRUE)
 
 # Includes children under 5
-counts$children_u5 <- sum(data$includes.children.under.5 == 1, na.rm = TRUE)
+counts_2025$children_u5 <- sum(data$includes.children.under.5 == 1, na.rm = TRUE)
 
 # Authors contacted
-counts$authors_contacted <- sum(data$authors.contacted == 1, na.rm = TRUE)
+# counts_2025$authors_contacted <- sum(data$authors.contacted == 1, na.rm = TRUE)
 
 # Authors responded
-counts$authors_responded <- sum(data$authors.responded == 1, na.rm = TRUE)
+counts_2025$authors_responded <- sum(data$authors.responded == 1, na.rm = TRUE)
 
 # Mortality data collected -> this is currently 0 for all
-counts$mortality_collected <- sum(data$mortality.data.collected == 1, na.rm = TRUE)
+counts_2025$mortality_collected <- sum(data$mortality.data.collected == 1, na.rm = TRUE)
 
 # Mortality data still available -> this is currently 0 for all
-counts$mortality_available <- sum(data$mortality.data.still.available == 1, na.rm = TRUE)
+counts_2025$mortality_available <- sum(data$mortality.data.still.available == 1, na.rm = TRUE)
+```
+
+# 2020 counts - from Fig 1 of manuscript
+```{r}
+counts_2020 <- list()
+counts_2020$database <- 1412
+counts_2020$other_sources <- 75
+counts_2020$total <- counts_2020$database + counts_2020$other_sources
+counts_2020$screened <- 1485
+counts_2020$full_text <- 82
+# did not have a "relevant intervention" category
+counts_2020$lmic <- 63
+counts_2020$rct <- 53
+counts_2020$children_u5 <- 52
+counts_2020$authors_responded <- 42
+counts_2020$mortality_collected <- 15
+counts_2020$mortality_available <- 13
+
+sources_text_2020 <- "Wolf et al. (2018) and Clasen et. al. (2015)"
+```
+
+# combine 2020 and 2025 counts
+```{r}
+counts_combined <- list()
+counts_combined$screened <- counts_2020$screened + counts_2025$screened
+counts_combined$full_text <- counts_2020$full_text + counts_2025$full_text
+# For relevant intervention, currently just add 2020 LMIC (since earlier filter didn't exist)
+counts_combined$relevant_intervention <- counts_2020$lmic + counts_2025$relevant_intervention
+counts_combined$lmic <- counts_2020$lmic + counts_2025$lmic
+counts_combined$rct <- counts_2020$rct + counts_2025$rct
+counts_combined$children_u5 <- counts_2020$children_u5 + counts_2025$children_u5
+# counts_combined$authors_contacted <- counts_2025$authors_contacted  
+counts_combined$authors_responded <- counts_2020$authors_responded + counts_2025$authors_responded
+counts_combined$mortality_collected <- counts_2020$mortality_collected + counts_2025$mortality_collected
+counts_combined$mortality_available <- counts_2020$mortality_available + counts_2025$mortality_available
 ```
 
 # Create flow chart
@@ -69,35 +109,45 @@ counts$mortality_available <- sum(data$mortality.data.still.available == 1, na.r
 flowchart <- grViz("
 digraph flowchart {
   
-  # Graph settings
   graph [rankdir = TB, fontsize = 12, nodesep = 0.5, ranksep = 0.8]
   node [shape = box, style = filled, fillcolor = lightblue, 
         fontname = Arial, fontsize = 11, margin = 0.2]
   
-  # Top row - two boxes side by side
-  {rank = same; A1; A2}
+  {rank = same; A1_2020; A2_2020; A1_2025; A2_2025}
+  {rank = same; Total_2020; Total_2025}
   
-  # Define nodes
-  A1 [label = '@@1']
-  A2 [label = '@@2']
-  B [label = '@@3']
-  C [label = '@@4']
-  D [label = '@@5']
-  E [label = '@@6']
-  F [label = '@@7']
-  G [label = '@@8']
-  H [label = '@@9']
-  I [label = '@@10']
-  J [label = '@@11']
-  K [label = '@@12']
+  A1_2020 [label = '@@1']
+  A2_2020 [label = '@@2']
+  A1_2025 [label = '@@3']
+  A2_2025 [label = '@@4']
+  Total_2020 [label = '@@5']
+  Total_2025 [label = '@@6']
+  B [label = '@@7']
+  C [label = '@@8']
+  D [label = '@@9']
+  E [label = '@@10']
+  F [label = '@@11']
+  G [label = '@@12']
+  H [label = '@@13']
+  I [label = '@@14']
+  J [label = '@@15']
   
-  # Node to merge A1 and A2
-  merge [shape = point, width = 0, height = 0]
+  merge_2020 [shape = point, width = 0, height = 0]
+  merge_2025 [shape = point, width = 0, height = 0]
+  merge_all [shape = point, width = 0, height = 0]
   
-  # Define edges
-  A1 -> merge [arrowhead = none]
-  A2 -> merge [arrowhead = none]
-  merge -> B
+  A1_2020 -> merge_2020 [arrowhead = none]
+  A2_2020 -> merge_2020 [arrowhead = none]
+  merge_2020 -> Total_2020
+  
+  A1_2025 -> merge_2025 [arrowhead = none]
+  A2_2025 -> merge_2025 [arrowhead = none]
+  merge_2025 -> Total_2025
+  
+  Total_2020 -> merge_all [arrowhead = none]
+  Total_2025 -> merge_all [arrowhead = none]
+  merge_all -> B
+  
   B -> C
   C -> D
   D -> E
@@ -106,21 +156,23 @@ digraph flowchart {
   G -> H
   H -> I
   I -> J
-  J -> K
 }
 
-[1]: paste0('a.1) ', counts$database, ' studies\\nidentified through\\ndatabase searching')
-[2]: paste0('a.2) ', counts$other_sources, ' studies from\\n', sources_text)
-[3]: paste0('b) ', counts$screened, ' studies screened')
-[4]: paste0('c) ', counts$full_text, ' records full-text\\nstudies for eligibility')
-[5]: paste0('d) ', counts$relevant_intervention, ' studies with \\n relevant intervention')
-[6]: paste0('e) ', counts$lmic, ' studies in low- or\\nmiddle-income country')
-[7]: paste0('f) ', counts$rct, ' RCTs')
-[8]: paste0('g) ', counts$children_u5, ' studies include\\nchildren under 5')
-[9]: paste0('h) ', counts$authors_contacted, ' authors contacted')
-[10]: paste0('i) ', counts$authors_responded, ' authors responded')
-[11]: paste0('j) ', counts$mortality_collected, ' studies - mortality\\ndata collected')
-[12]: paste0('k) ', counts$mortality_available, ' studies - mortality\\ndata still available')
+[1]: paste0('a.1) 2020: ', counts_2020$database, ' studies\\nidentified through\\ndatabase searching')
+[2]: paste0('a.2) 2020: ', counts_2020$other_sources, ' studies from\\n', sources_text_2020)
+[3]: paste0('a.1) 2025: ', counts_2025$database, ' studies\\nidentified through\\ndatabase searching')
+[4]: paste0('a.2) 2025: ', counts_2025$other_sources, ' studies from\\n', sources_text)
+[5]: paste0('2020 Total: ', counts_2020$total, ' studies')
+[6]: paste0('2025 Total: ', counts_2025$total, ' studies')
+[7]: paste0('b) ', counts_combined$screened, ' studies screened')
+[8]: paste0('c) ', counts_combined$full_text, ' records full-text\\nstudies for eligibility')
+[9]: paste0('d) ', counts_combined$relevant_intervention, ' studies with\\nrelevant intervention')
+[10]: paste0('e) ', counts_combined$lmic, ' studies in low- or\\nmiddle-income country')
+[11]: paste0('f) ', counts_combined$rct, ' RCTs')
+[12]: paste0('g) ', counts_combined$children_u5, ' studies include\\nchildren under 5')
+[13]: paste0('h) ', counts_combined$authors_responded, ' authors responded')
+[14]: paste0('i) ', counts_combined$mortality_collected, ' studies - mortality\\ndata collected')
+[15]: paste0('j) ', counts_combined$mortality_available, ' studies - mortality\\ndata still available')
 ")
 
 saveWidget(flowchart, "../output/selection_flowchart.html", selfcontained = TRUE)
