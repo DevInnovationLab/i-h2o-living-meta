@@ -162,9 +162,9 @@ digraph flowchart {
   I -> J
 }
 
-[1]: paste0('a.1) 2020: ', counts_2020$database, ' studies\\nidentified through\\ndatabase searching')
+[1]: paste0('a.1) 2016-20: ', counts_2020$database, ' studies\\nidentified through\\ndatabase searching')
 [2]: paste0('a.2) 2020: ', counts_2020$other_sources, ' studies from\\n', sources_text_2020)
-[3]: paste0('a.1) 2025: ', counts_2025$database, ' studies\\nidentified through\\ndatabase searching')
+[3]: paste0('a.1) 2020-25: ', counts_2025$database, ' studies\\nidentified through\\ndatabase searching')
 [4]: paste0('a.2) 2025: ', counts_2025$other_sources, ' studies from\\n', sources_text)
 [5]: paste0('2020 Total: ', counts_2020$total, ' studies')
 [6]: paste0('2025 Total: ', counts_2025$total, ' studies')
