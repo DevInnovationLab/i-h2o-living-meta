@@ -169,7 +169,7 @@ digraph flowchart {
 [5]: paste0('2020 Total: ', counts_2020$total, ' studies')
 [6]: paste0('2025 Total: ', counts_2025$total, ' studies')
 [7]: paste0('b) ', counts_combined$screened, ' studies screened')
-[8]: paste0('c) ', counts_combined$full_text, ' records full-text\\nstudies for eligibility')
+[8]: paste0('c) ', counts_combined$full_text, ' studies with \\nfull text reviewed')
 [9]: paste0('d) ', counts_combined$relevant_intervention, ' studies with\\nrelevant intervention')
 [10]: paste0('e) ', counts_combined$lmic, ' studies in low- or\\nmiddle-income country')
 [11]: paste0('f) ', counts_combined$rct, ' RCTs')
