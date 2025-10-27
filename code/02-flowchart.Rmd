@@ -5,6 +5,10 @@ output: html_document
 
 This file creates a flowchart showing the selection process of studies. It requires that in the same folder, you have a study dataset called study_dataset.xlsx, where each row is 1 study. 
 
+# TO DO
+In the paper we make a distinction between studies reporting mortality in the paper, having mortality as an outcome, and having mortality data available through contacting authors. You could make it three bulletpoints under the general heading of "mortality data available"?
+
+# setup
 ```{r}
 # install.packages("readxl")
 # install.packages("dplyr")
